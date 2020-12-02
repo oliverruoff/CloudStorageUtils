@@ -1,0 +1,63 @@
+﻿@page "/"
+@using CloudStorageUtils.ViewModel
+
+<h1>Welcome to CloudStorageUtils</h1>
+
+<Radzen.Blazor.RadzenTextBox Placeholder="Enter Dropbox API Key" Style="width: 750px" @bind-Value="@Dropbox.DropboxApiKey"></Radzen.Blazor.RadzenTextBox>
+<Radzen.Blazor.RadzenButton Text="OK" Click="@((button) => ApiOkPressed())"></Radzen.Blazor.RadzenButton>
+@if (@Dropbox.UserName != null)
+{
+    <h2>Your username is: @Dropbox.UserName</h2>
+    <h3>Choose folder to list</h3>
+    <Radzen.Blazor.RadzenTextBox Placeholder="/" Style="width: 750px" @bind-Value="@FolderPrefix"></Radzen.Blazor.RadzenTextBox>
+    <Radzen.Blazor.RadzenButton Text="OK" Click="@((button) => ListFolderOkPressed())"></Radzen.Blazor.RadzenButton>
+    if (@Dropbox.ListedFiles != null)
+    {
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Path</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var file in @Dropbox.ListedFiles)
+                {
+                    <tr>
+                        <td>@file.Name</td>
+                        <td>@file.PathLower</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }   else
+    {
+        
+    }
+}
+else
+{
+
+}
+
+
+@code {
+
+    public DropboxViewModel Dropbox { get; set; } = new DropboxViewModel();
+    public string FolderPrefix { get; set; }
+    public DropboxCloudStorageService DBCloudService { get; set; }
+
+    protected async void ApiOkPressed()
+    {
+        DBCloudService = new DropboxCloudStorageService(Dropbox.DropboxApiKey);
+        var userName = await DBCloudService.GetUserName();
+        Dropbox.UserName = userName;
+        this.StateHasChanged();
+    }
+
+    protected async void ListFolderOkPressed()
+    {
+        Dropbox.ListedFiles = await DBCloudService.ListCloudFolder(FolderPrefix);
+        this.StateHasChanged();
+    }
+}
